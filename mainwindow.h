@@ -33,6 +33,7 @@ class Chip8MainWindow : public QMainWindow
 		void Step(void);
 		void Continue(void);
 		void Clock(int freq);
+		void Reset(void);
 
 	public slots:
 //		void DrawScreen(std::vector<std::vector<bool>> dsp);

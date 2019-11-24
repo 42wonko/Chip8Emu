@@ -68,12 +68,13 @@ CHIP8::CHIP8(Chip8Keyboard* aKeyboard, QObject* aParent)
 	memcpy(ram+offset, CHAR_f,5), offset+=5;
 
 	mDsp = new Chip8Display();
-	emuTimer = new QTimer(this);																			// create timer for emulating the sound and delay timers
-	connect(emuTimer, &QTimer::timeout, this, &CHIP8::handle_timers);										// connect callback to timer
-	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Clock, this, &CHIP8::Clock);			// Let the user change the emulation speed
-	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Stop, this, &CHIP8::Stop);			// Let the user change the emulation speed
-	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Step, this, &CHIP8::Step);			// Let the user change the emulation speed
-	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Continue, this, &CHIP8::Continue);	// Let the user change the emulation speed
+	emuTimer = new QTimer(this);																				// create timer for emulating the sound and delay timers
+	connect(emuTimer, &QTimer::timeout, this, &CHIP8::handle_timers);											// connect callback to timer
+	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Clock,		this, &CHIP8::Clock);		// Let the user change the emulation speed
+	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Stop,		this, &CHIP8::Stop);		// Interrupt the current program
+	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Step,		this, &CHIP8::Step);		// Single-step the current program
+	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Continue,	this, &CHIP8::Continue);	// Continue current program
+	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Reset,		this, &CHIP8::Reset);		// Terminate current program
 
 	exitThread = exitSignal.get_future();
 }
@@ -831,7 +832,12 @@ void CHIP8::mode(EMULATION_MODE mode)
 /* Pupblic slots */
 
 /**
+	This method interrupts the  execution of the current program but keeps the
+	emulation thread running.
 
+	We are setting execMode to MODE_STEP. The emulator main loop ( \ref run()) checks
+	for this value and halts execution untill we send a notification via a
+	condition variable in methods \ref step() or \ref continue().
 */
 void CHIP8::Stop(void)
 {
@@ -841,37 +847,66 @@ void CHIP8::Stop(void)
 //-----------------------------------------------------------------------------
 
 /**
-
+	This method single-steps through the program. This method only has an effect
+	if the programm was Stopped prior to calling this method.
 */
 void CHIP8::Step(void)
 {
-	std::lock_guard<std::mutex> guard(mtx);
-	do_step = true;
-	cond_var.notify_one();
+	if(MODE_STEP == execMode){						// only do the stepping if we are already stopped
+		std::lock_guard<std::mutex> guard(mtx);		// acquire mutex for condition var.
+		do_step = true;								// do one step
+		cond_var.notify_one();						// send the notification
+	}
 }
 //-----------------------------------------------------------------------------
 
 /**
-
+	This method resumes execution after the program was interrupted with \ref Stop().
 */
 void CHIP8::Continue(void)
 {
-	execMode = MODE_RUNNING;
-	std::lock_guard<std::mutex> guard(mtx);
-	cond_var.notify_one();
-	do_step		= true;
+	if(MODE_STEP == execMode){						// only resume execution if we were stopped
+		execMode = MODE_RUNNING;					// resume execution
+		std::lock_guard<std::mutex> guard(mtx);		// acquire mutex for condition var ...
+		cond_var.notify_one();						// ... and tell the thread to stop waiting for the condition var
+		do_step		= true;							//
+	}
 }
 //-----------------------------------------------------------------------------
 
 
 /**
+	This method starts the actual emulation in a separate thread.
 
+	\param	[in]	address	Starting address of the program.
 */
 void CHIP8::Run(u_int16_t address)
 {
 	emulatorRunning = true;
-	start_timers();
+	execMode = MODE_RUNNING;
+	start_timers();																		// start the CHIP8 60 Hz timers
 	runMethod =  new std::thread(&CHIP8::run, this, address, std::move(exitThread));	// "this" needs to be passed as a dummy-object!
 }
 //-----------------------------------------------------------------------------
 
+/**
+
+*/
+void CHIP8::Reset(void)
+{
+	emuTimer->stop();
+	if(runMethod){
+		exitSignal.set_value();			// tell run() thread to stop
+
+		if(MODE_STEP == execMode){		// make sure we are not stuck in a wait for a condition var
+			Continue();
+		}
+
+		runMethod->join();
+	}
+	runMethod = nullptr;
+	emulatorRunning = false;
+	mDsp->clear();
+	memset(ram, 0, VM_SIZE);			// clear memory
+}
+//-----------------------------------------------------------------------------

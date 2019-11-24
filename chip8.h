@@ -130,11 +130,12 @@ class CHIP8 : public QObject
 		void UpdateSP(u_int16_t const sp);				///< Send current stack pointer to main windows for display.
 
 	public slots:
-		void Run(u_int16_t address);
-		void Stop(void);
-		void Step(void);
-		void Continue(void);
-		void Clock(int time){sleep_time = time;}
+		void Run(u_int16_t address);					///< This slot executes the program at \ref address in a new thread.
+		void Stop(void);								///< This slot interrupts the running thread (but keeps it alive)
+		void Step(void);								///< This slot single-steps the program.
+		void Continue(void);							///< This slot continues after an interrupt.
+		void Clock(int time){sleep_time = time;}		///< This slot changes the emulation speed.
+		void Reset(void);								///< This slot stops the current program and terminates the thread.
 
 	private:
 		void start_timers(void);									///< Start the 60Hz CHIP8 timers

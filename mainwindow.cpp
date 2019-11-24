@@ -142,7 +142,7 @@ void Chip8MainWindow::on_toolButton_clicked()
 */
 void Chip8MainWindow::on_resetButton_clicked()
 {
-
+	emit Reset();
 }
 //-----------------------------------------------------------------------------
 
