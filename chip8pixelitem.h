@@ -16,20 +16,20 @@ public:
 	Chip8PixelItem();
 	Chip8PixelItem(QRectF rect);
 	~Chip8PixelItem() override;
-	void on(void)		{pixelState = PIXEL_ON;}
-	void off(void)		{pixelState = PIXEL_OFF;}
-	bool state(void)	{return pixelState;}
+	void on(void)		{pixelState = PIXEL_ON;}	///< Enable pixel.
+	void off(void)		{pixelState = PIXEL_OFF;}	///< Disable pixel.
+	bool state(void)	{return pixelState;}		///< Return current state of pixel.
 
 	QRectF	boundingRect() const override;
 	void 	paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
 private:
-	bool	pixelState;
-	QRectF	pixel;
-	QPen	whitePen;
-	QPen	blackPen;
-	QBrush	whiteBrush;
-	QBrush	blackBrush;
+	bool	pixelState;		///< The current pixel state (\ref PIXEL_OFF or \ref PIXEL_ON).
+	QRectF	pixel;			///<
+	QPen	whitePen;		///< Default pen for an OFF-pixel.
+	QPen	blackPen;		///< Default pen for an ON-pixel.
+	QBrush	whiteBrush;		///< Default brush for an OFF-pixel.
+	QBrush	blackBrush;		///< Default brush for an ON-pixel.
 };
 
 #endif // CHIP8PIXELITEM_H

@@ -101,9 +101,8 @@ void Chip8GraphicsView::DrawSprite(std::vector<std::vector<bool>> dsp, unsigned 
 			} else {
 				display[xm][ym]->off();
 			}
-			display[xm][ym]->paint(&painter,nullptr,nullptr);	//
 		}
 	}
-	gs->update();												// actually show the changes
+	gs->update();											// actually show the changes
 }
 //-----------------------------------------------------------------------------

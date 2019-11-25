@@ -87,13 +87,14 @@ CHIP8::~CHIP8()
 {
 	trace_msg("-T- CHIP8::~CHIP8() start");
 
-	std::cerr << "CHIP8::~CHIP8(): quitting" << std::endl;
 
 	emuTimer->stop();
 	if(runMethod){
 		exitSignal.set_value();
 		runMethod->join();
 	}
+	delete emuTimer;
+	delete mDsp;
 	delete [] ram;
 	if(log_file){
 		fclose(log_file);
@@ -598,7 +599,6 @@ int CHIP8::run(u_int16_t address, std::future<void> exitRequest)
 		}
 	}
 	trace_msg("-T- CHIP8::run() end");
-	std::cerr << "CHIP8::run(): stopped running" << std::endl;
 	emulatorRunning=false;
 
 	return 0;

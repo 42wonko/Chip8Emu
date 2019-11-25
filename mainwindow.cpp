@@ -57,13 +57,14 @@ Chip8MainWindow::~Chip8MainWindow()
 {
 	delete cgv;
 	delete list_model;
-	emuThread.terminate();
-	emuThread.wait();
-	delete emu;
-	delete configDialog;
 	delete kbdDialog;
+	delete configDialog;
+	emuThread.quit();
+	emuThread.wait();
+	emu->deleteLater();
 	delete keyboard;
-	delete kbdDevice;
+	this->removeEventFilter(kbdDevice);												// remove our event filter just to be sure
+	kbdDevice->deleteLater();
 	delete ui;
 }
 //-----------------------------------------------------------------------------

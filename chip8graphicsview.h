@@ -23,7 +23,7 @@ class Chip8GraphicsView : public QObject
 	private:
 		QGraphicsView*								gv;			///< The QtGraphicsView that display the CHIP8 display.
 		QGraphicsScene*								gs;			///< The scene for the graphics view.
-		QPainter									painter;	///< Painter that does the drawing.
+//		QPainter									painter;	///< Painter that does the drawing.
 		unsigned int								width;		///< Logical X-resolution of the CHIP8 display.
 		unsigned int								height;		///< Logical Y-resolution of the CHIP8 display.
 		std::vector<std::vector<Chip8PixelItem*>>	display;	///< Local pixel buffer for faster access to items in scene.

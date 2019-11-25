@@ -85,7 +85,14 @@ int Chip8Keyboard::GetKey(char key)
 //-----------------------------------------------------------------------------
 
 /**
+	This method assigns a new mapping to a key. This is used for
+	user defined keymappings.
 
+	\param	[in]	source	The key that is to be mapped to a new value (i.e. the original CHIP8 key-value).
+	\param	[in]	target	The new key value that is to be used for \ref source.
+	\return	One of:
+			-	false:	The mapping couldn't be done because the new key is already assigned to another key.
+			-	true:	Mapping was successful.
 */
 bool Chip8Keyboard::MapKey(char source, int target)
 {

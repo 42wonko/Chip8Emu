@@ -32,13 +32,15 @@ int KbdDevice::ReadKey(void)
 	if(keyPressed){
 		return currentKey;
 	} else {
-		return -1;
+		return KBD_DEVICE_NO_KEY;
 	}
 }
 //-----------------------------------------------------------------------------
 
 /**
 	This method implements the blocking read function.
+
+	The event filter will block access until the next key-press event occurrs.
 */
 int KbdDevice::GetKey(void)
 {
@@ -51,13 +53,35 @@ int KbdDevice::GetKey(void)
 //-----------------------------------------------------------------------------
 
 /**
+	This method implements the event filter to handle the keypress and key-release
+	events.
 
+	If we receive a key-press event we set the member \ref keyPressed to true and
+	maintain a reference count of the number of incoming key-press events. If we
+	receive a key-release event we decrement the counter for the number of pressed
+	keys and set \ref keyPressed to false when we reach a count of 0.
+
+	When the CHIP8 emulator calls the non-blocking read function we simply check the
+	state of the \ref keyPressed member and return the proper kay value.
+
+	The blocking read  uses a semaphore to block access to the keyboard device after the
+	last key has been released (keyCount = 0). The blocking read will now block until
+	the next key-press event arrives and releases the semaphore.
+
+	NOTE: The calling object has to be running in a different thread.
+
+	All events that are not QEvent::KeyPress or QEvent::KeyRelease are passed on the
+	the normal event handler.
+
+
+	\param	[in]	obj	???
+	\param	[in]	event	The incoming event.
 */
 bool KbdDevice::eventFilter(QObject *obj, QEvent *event)
 {
 	if (event->type() == QEvent::KeyPress) {
 		QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
-		qDebug("KbdDevice::eventFilter(): key press %d", keyEvent->key());
+//		qDebug("KbdDevice::eventFilter(): key press %d", keyEvent->key());
 		++keyCount;												// increase reference count for pressed keys
 		keyPressed = true;										// once we receive a kepress-event at least one key
 																// ... is pressed until we receive the same amount of
