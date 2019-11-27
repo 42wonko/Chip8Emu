@@ -44,7 +44,7 @@ Chip8Keyboard::Chip8Keyboard(KbdDevice* device)
 */
 Chip8Keyboard::~Chip8Keyboard()
 {
-	delete kbdDevice;
+//	delete kbdDevice;
 }
 //-----------------------------------------------------------------------------
 

@@ -172,7 +172,7 @@ class CHIP8 : public QObject
 		QTimer*             	emuTimer;					///< Timer to handle the CHIP8 sound- and delay-timers.
 		std::thread*			runMethod;
 		std::future<void>		exitThread;					///< Future object to cancel the run method
-		std::promise<void>		exitSignal;					///<
+		std::promise<void>*		exitSignal;					///<
 		std::mutex				mtx;						///< Synchronize access to condition variable to control exec mode
 		std::condition_variable	cond_var;					///< Used to control the execution mode (halt, step, continue)
 		bool 					do_step;

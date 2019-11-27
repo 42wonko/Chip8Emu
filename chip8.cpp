@@ -41,6 +41,7 @@ CHIP8::CHIP8(Chip8Keyboard* aKeyboard, QObject* aParent)
 , ram(nullptr), program_size(0), emuMode(MODE_CLASSIC), execMode(MODE_RUNNING), emulatorRunning(false), PC(0x200)
 , I(0), SP(0x0f), TD(0), TS(0), sleep_time(1000), dsp_width(WIN_COLS), dsp_height(WIN_ROWS)
 , f_trace(false), f_log(false), f_ptrace(false), keyboard(aKeyboard), runMethod(nullptr), do_step(true)
+, exitSignal(0)
 {
 	Q_UNUSED(aParent)
 
@@ -76,7 +77,7 @@ CHIP8::CHIP8(Chip8Keyboard* aKeyboard, QObject* aParent)
 	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Continue,	this, &CHIP8::Continue);	// Continue current program
 	connect(dynamic_cast<Chip8MainWindow*>(aParent), &Chip8MainWindow::Reset,		this, &CHIP8::Reset);		// Terminate current program
 
-	exitThread = exitSignal.get_future();
+//	exitThread = exitSignal.get_future();
 }
 //-----------------------------------------------------------------------------
 
@@ -90,9 +91,10 @@ CHIP8::~CHIP8()
 
 	emuTimer->stop();
 	if(runMethod){
-		exitSignal.set_value();
+		exitSignal->set_value();
 		runMethod->join();
 	}
+    delete exitSignal;
 	delete emuTimer;
 	delete mDsp;
 	delete [] ram;
@@ -885,6 +887,11 @@ void CHIP8::Run(u_int16_t address)
 	emulatorRunning = true;
 	execMode = MODE_RUNNING;
 	start_timers();																		// start the CHIP8 60 Hz timers
+    if(exitSignal){
+        delete exitSignal, exitSignal = 0;
+    }
+    exitSignal = new std::promise<void>;
+	exitThread = exitSignal->get_future();
 	runMethod =  new std::thread(&CHIP8::run, this, address, std::move(exitThread));	// "this" needs to be passed as a dummy-object!
 }
 //-----------------------------------------------------------------------------
@@ -896,7 +903,7 @@ void CHIP8::Reset(void)
 {
 	emuTimer->stop();
 	if(runMethod){
-		exitSignal.set_value();			// tell run() thread to stop
+		exitSignal->set_value();			// tell run() thread to stop
 
 		if(MODE_STEP == execMode){		// make sure we are not stuck in a wait for a condition var
 			Continue();
