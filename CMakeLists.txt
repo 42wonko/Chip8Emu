@@ -12,7 +12,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
-find_package(Thread)
+find_package(Threads)
 
 add_executable(Chip8Emu
   main.cpp
@@ -42,4 +42,4 @@ add_executable(Chip8Emu
   chip8graphicsview.h
 )
 
-target_link_libraries(Chip8Emu PRIVATE Qt5::Widgets pthread)
+target_link_libraries(Chip8Emu PRIVATE Qt5::Widgets)
