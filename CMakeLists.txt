@@ -42,4 +42,4 @@ add_executable(Chip8Emu
   chip8graphicsview.h
 )
 
-target_link_libraries(Chip8Emu PRIVATE Qt5::Widgets)
+target_link_libraries(Chip8Emu PRIVATE Qt5::Widgets Threads::Threads)
